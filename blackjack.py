@@ -111,6 +111,7 @@ class Player:
         self.name = name
         self.score = 0
         self.hands = []
+        self.surrendered=False
 
     def receive_result(self, outcome):
         if outcome == 'win':
@@ -119,6 +120,7 @@ class Player:
             self.score += 2
         elif outcome == 'loss':
             self.score -= 1
+
 
     def get_score(self):
         return self.score
@@ -134,7 +136,7 @@ class Dealer:
         self.name = "Dealer"
 
     def show_partial_hand(self):
-        return f"Dealer's Hand: {self.hand.cards[0]} | Value: {self.hand.get_partial_value()} "
+        return f"Dealer's Hand: {self.hand.cards[0]} | Value: {self.hand.cards[0].get_value()} "
 
     def show_full_hand(self):
         return f"Dealer's Hand: {', '.join(str(card) for card in self.hand.cards)} | Value: {self.hand.get_value()}"
@@ -179,7 +181,7 @@ class BlackJackGame:
         hand = player.hands[0]
 
         while not hand.is_bust():
-            print(player.name)
+            print(f"\n{player.name}'s turn")
 
             if hand.is_blackjack():
                 print("Blackjack!")
@@ -190,14 +192,22 @@ class BlackJackGame:
             if choice == '1':
                 card = self.deck.deal_card()
                 hand.add_card(card)
-                print(f"You drew: {card}")
+                print(f"\nYou drew: {card}")
                 print(f"Current hand: {hand}\n")
                 time.sleep(1)
 
             elif choice == '2':
+                print(f"\n{player.name} stands")
+                time.sleep(1)
                 break
-            
 
+            elif choice=='3':
+                if len(player.hands[0].cards)==2:
+                    print(f"\n{player.name} surrenders")
+                    time.sleep(1)
+                    player.surrendered=True
+                    break
+                else: print("\nYou can't surrender as you've already played in this round")
 
             else:
                 print("Invalid choice.")
@@ -219,35 +229,59 @@ class BlackJackGame:
         dealer_value = dealer.get_value()
         dealer_bj = dealer.is_blackjack()
 
+        print("\n===== ROUND RESULTS =====")
+        print(f"Dealer: {dealer} \n")
+
         for player in self.players:
             hand = player.hands[0]
             player_value = hand.get_value()
             player_bj = hand.is_blackjack()
 
+            print(f"--- {player.name} ---")
+            print(f"Hand: {hand}")
+
+            # Safe check for surrender
+            if player.surrendered:
+                print("Result: Surrendered")
+                player.receive_result('loss')
+                print()
+                continue  # ← IMPORTANT: stop further checks
+
             if hand.is_bust():
-                print(f"{player.name} busts.")
+                print("Result: Bust")
                 player.receive_result('loss')
 
             elif player_bj:
                 if dealer_bj:
-                    print(f"{player.name} pushes with Blackjack.")
+                    print("Result: Push (both Blackjack)")
                     player.receive_result('push')
                 else:
-                    print(f"{player.name} gets BLACKJACK!")
+                    print("Result: Blackjack!")
                     player.receive_result('blackjack')
 
-            elif dealer.is_bust() or player_value > dealer_value:
-                print(f"{player.name} wins with {player_value}!")
+            elif dealer.is_bust():
+                print("Result: Win (dealer bust)")
+                player.receive_result('win')
+
+            elif player_value > dealer_value:
+                print(f"Result: Win ({player_value} vs {dealer_value})")
                 player.receive_result('win')
 
             elif player_value == dealer_value:
-                print(f"{player.name} pushes.")
+                print(f"Result: Push ({player_value} vs {dealer_value})")
                 player.receive_result('push')
 
             else:
-                print(f"{player.name} loses.")
+                print(f"Result: Loss ({player_value} vs {dealer_value})")
                 player.receive_result('loss')
 
+            print()
+
+        # Final scoreboard
+        print("===== SCOREBOARD =====")
+        for player in self.players:
+            print(f"{player.name}: {player.score}")
+        print("======================\n")
 
     def display_game_state(self, hide_dealer_card):
         print()
