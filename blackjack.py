@@ -42,7 +42,7 @@ class Deck:
         self.cards = []
         for suit in ["Hearts", "Diamonds", "Clubs", "Spades"]:
             for rank in [
-                "A","A","A","A","A","A","A","A","A","A","A","A",
+                "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"
             ]:
                 self.cards.append(Card(rank, suit))
 
