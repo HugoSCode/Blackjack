@@ -42,7 +42,12 @@ class Deck:
         self.cards = []
         for suit in ["Hearts", "Diamonds", "Clubs", "Spades"]:
             for rank in [
-                "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"
+                "2",
+                "3",
+                "A",
+                "A",
+                "A",
+                "A",
             ]:
                 self.cards.append(Card(rank, suit))
 
@@ -178,7 +183,7 @@ class BlackJackGame:
         self.current_round = 0
 
         print("Welcome to this game of BlackJack bruzzas and beezes")
-        print(",  ".join(str(player) for player in self.players), "\n")
+        print(", ".join(str(player) for player in self.players))
 
     # Starts a new round (resets hands, deals cards)
     def start_round(self):
@@ -204,13 +209,12 @@ class BlackJackGame:
     def player_turn(self, player):
 
         i = 0
-        # IMPORTANT: use index loop because hands can change (splitting)
         while i < len(player.hands):
-            hand = player.hands[i]
 
-            while not hand.is_bust():
+            while not player.hands[i].is_bust():
+                hand = player.hands[i]
                 print(f"\n{player.name}'s turn")
-                print(f"\n{hand}")
+                print(f"{hand}")
 
                 if hand.is_blackjack():
                     print("\nBlackjack!")
@@ -228,7 +232,7 @@ class BlackJackGame:
                     card = self.deck.deal_card()
                     hand.add_card(card)
                     print(f"\nYou drew: {card}")
-                    print(f"Current hand: {hand}\n")
+                    print(f"Current hand: {hand}")
                     time.sleep(1)
 
                 elif choice == "2":
@@ -255,11 +259,11 @@ class BlackJackGame:
                     player.hands.extend(new_hands)
 
                     # Give each new hand one extra card
-                    for i in range(2):
+                    for j in range(2):
                         card = self.deck.deal_card()
-                        player.hands[i].add_card(card)
-
-                    break  # exit loop to process new hands
+                        player.hands[j].add_card(card)
+                        print(f"\nYou drew: {card}")
+                        print(f"Current hand: {player.hands[j]}")
 
                 else:
                     print("Invalid choice.")
@@ -282,55 +286,63 @@ class BlackJackGame:
             time.sleep(2)
 
     # Determines results for each player
+
     def determine_winners(self):
         dealer = self.dealer.hand
         dealer_value = dealer.get_value()
         dealer_bj = dealer.is_blackjack()
 
         print("\n===== ROUND RESULTS =====")
-        print(f"Dealer: {dealer} \n")
+        print(f"Dealer: {dealer}\n")
 
         for player in self.players:
-            hand = player.hands[0]  # NOTE: only checks first hand (bug if split!)
-            player_value = hand.get_value()
-            player_bj = hand.is_blackjack()
 
             print(f"--- {player.name} ---")
-            print(f"Hand: {hand}")
 
-            if player.surrendered:
-                print("Result: Surrendered")
-                player.receive_result("loss")
-                print()
-                continue
+            # Check every hand (important for split)
+            for index, hand in enumerate(player.hands, start=1):
 
-            if hand.is_bust():
-                print("Result: Bust")
-                player.receive_result("loss")
+                player_value = hand.get_value()
+                player_bj = hand.is_blackjack()
 
-            elif player_bj:
-                if dealer_bj:
-                    print("Result: Push (both Blackjack)")
-                    player.receive_result("push")
+                # Label split hands nicely
+                if len(player.hands) > 1:
+                    print(f"\nHand {index}: {hand}")
                 else:
-                    print("Result: Blackjack!")
-                    player.receive_result("blackjack")
+                    print(f"Hand: {hand}")
 
-            elif dealer.is_bust():
-                print("Result: Win (dealer bust)")
-                player.receive_result("win")
+                if player.surrendered:
+                    print("Result: Surrendered")
+                    player.receive_result("loss")
+                    continue
 
-            elif player_value > dealer_value:
-                print(f"Result: Win ({player_value} vs {dealer_value})")
-                player.receive_result("win")
+                if hand.is_bust():
+                    print("Result: Bust")
+                    player.receive_result("loss")
 
-            elif player_value == dealer_value:
-                print(f"Result: Push ({player_value} vs {dealer_value})")
-                player.receive_result("push")
+                elif player_bj:
+                    if dealer_bj:
+                        print("Result: Push (both Blackjack)")
+                        player.receive_result("push")
+                    else:
+                        print("Result: Blackjack!")
+                        player.receive_result("blackjack")
 
-            else:
-                print(f"Result: Loss ({player_value} vs {dealer_value})")
-                player.receive_result("loss")
+                elif dealer.is_bust():
+                    print("Result: Win (dealer bust)")
+                    player.receive_result("win")
+
+                elif player_value > dealer_value:
+                    print(f"Result: Win ({player_value} vs {dealer_value})")
+                    player.receive_result("win")
+
+                elif player_value == dealer_value:
+                    print(f"Result: Push ({player_value} vs {dealer_value})")
+                    player.receive_result("push")
+
+                else:
+                    print(f"Result: Loss ({player_value} vs {dealer_value})")
+                    player.receive_result("loss")
 
             print()
 
@@ -339,7 +351,6 @@ class BlackJackGame:
             print(f"{player.name}: {player.score}")
         print("======================\n")
 
-    # Shows current game state
     def display_game_state(self, hide_dealer_card):
         print()
         if hide_dealer_card:
@@ -350,9 +361,10 @@ class BlackJackGame:
         print()
 
         for player in self.players:
-            print(player)
-            print(player.hands[0])  # NOTE: only shows first hand
-            print()
+            print(f"\n{player}")
+            for i in range(len(player.hands)):
+                print(f"Hand {i+1}: {player.hands[i]}")
+        print("\n=====================================================")
 
     # Main game loop
     def play_game(self):
