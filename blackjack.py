@@ -44,9 +44,16 @@ class Deck:
             for rank in [
                 "2",
                 "3",
-                "A",
-                "A",
-                "A",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "J",
+                "Q",
+                "K",
                 "A",
             ]:
                 self.cards.append(Card(rank, suit))
@@ -187,6 +194,7 @@ class BlackJackGame:
 
     # Starts a new round (resets hands, deals cards)
     def start_round(self):
+        print(f"Here {', '.join(str(p) for p in self.players)}")
         self.current_round += 1
         self.dealer.hand.reset_hand()
 
@@ -380,8 +388,23 @@ class BlackJackGame:
             self.dealer_turn()
             self.determine_winners()
 
+            eliminated = []
+
+            for p in self.players:
+                print(p.score)
+
+                if p.score <= -10:
+                    print(f"{p.name} has been eliminated from the game")
+                    eliminated.append(p)
+
+            for p in eliminated:
+                self.players.remove(p)
+
             print("\nEnd of Round\n")
 
+            if not self.players:
+                print("All players have been eliminated.\nThanks for playing!")
+                break
             cont = input("Play another round? (y/n): ")
             if cont.lower() != "y":
                 break
