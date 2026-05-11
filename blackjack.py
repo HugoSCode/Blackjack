@@ -171,7 +171,7 @@ class Dealer:
         return f"Dealer's Hand: {self.hand.cards[0]} | Value: {self.hand.cards[0].get_value()} "
 
     def show_full_hand(self):
-        return f"Dealer's Hand: {', '.join(str(card) for card in self.hand.cards)} | Value: {self.hand.get_value()}"
+        return f"Dealer's Hand: {', '.join(str(card) for card in self.hand.cards)} | Value: {self.hand.get_value()}" 
 
     # Dealer hits on 16 or less (standard rule)
     def should_hit(self):
@@ -281,17 +281,17 @@ class BlackJackGame:
     # Dealer plays after all players
     def dealer_turn(self):
         self.dealer.show_full_hand()
-
+        time.sleep(2)
         while self.dealer.should_hit():
             card = self.deck.deal_card()
             self.dealer.hand.add_card(card)
             print(f"Dealer hits and draws: {card} | Current hand: {self.dealer.hand}")
-
+            time.sleep(2)
             if self.dealer.hand.is_bust():
                 print("Dealer busts!")
                 break
 
-            time.sleep(2)
+            
 
     # Determines results for each player
 
@@ -402,11 +402,16 @@ class BlackJackGame:
 
             print("\nEnd of Round\n")
 
+
+            for p in self.players:
+                cont = input(f"{p.name} Do you want to play another round? (y/n): ")
+                if cont.lower() != "y":
+                    eliminated.append(p)
+
+            for p in eliminated:
+                self.players.remove(p)
             if not self.players:
                 print("All players have been eliminated.\nThanks for playing!")
-                break
-            cont = input("Play another round? (y/n): ")
-            if cont.lower() != "y":
                 break
 
 
